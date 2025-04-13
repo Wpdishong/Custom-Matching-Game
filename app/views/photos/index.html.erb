@@ -1,0 +1,28 @@
+<h1>My Photos</h1>
+
+<div class="row">
+  <% @photos.each do |photo| %>
+    <div class="col-md-4 mb-4">
+      <div class="card">
+        <%= image_tag photo.image, class: "card-img-top" if photo.image.attached? %>
+        <div class="card-body">
+          <h5 class="card-title"><%= photo.title %></h5>
+          <div class="btn-group">
+            <%= link_to 'View', photo_path(photo), class: 'btn btn-primary' %>
+            <%= button_to 'Delete', photo_path(photo), method: :delete, class: 'btn btn-danger', form: { data: { turbo_confirm: 'Are you sure?' } } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<% if @photos.empty? %>
+  <div class="text-center mt-4">
+    <p>You haven't uploaded any photos yet.</p>
+  </div>
+<% end %>
+
+<div class="mt-4">
+  <%= link_to 'Upload New Photo', new_photo_path, class: 'btn btn-success' %>
+</div>

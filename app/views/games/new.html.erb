@@ -1,0 +1,226 @@
+<div class="game-container">
+  <div class="game-header">
+    <h1>Photo Matching Game</h1>
+    <div class="game-stats">
+      <span>Score: <span id="score">0</span></span>
+      <span>Matches Found: <span id="matches">0</span>/8</span>
+    </div>
+  </div>
+
+  <div class="game-board">
+    <% @photos.each do |photo| %>
+      <% 2.times do %>
+        <div class="card-container" data-photo-id="<%= photo.id %>">
+          <div class="memory-card">
+            <div class="front">
+              <%= image_tag photo.image, class: "card-image" %>
+            </div>
+            <div class="back">
+              <span>?</span>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<%= content_for :styles do %>
+  <style>
+    .game-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .game-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .game-stats {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      font-size: 1.2em;
+      margin-bottom: 2rem;
+    }
+
+    .game-board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      perspective: 1000px;
+    }
+
+    .card-container {
+      aspect-ratio: 1;
+      perspective: 1000px;
+      cursor: pointer;
+    }
+
+    .memory-card {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .memory-card.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .front, .back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2em;
+      font-weight: bold;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+    }
+
+    .front {
+      transform: rotateY(180deg);
+      background: white;
+      overflow: hidden;
+    }
+
+    .back {
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: white;
+      font-size: 2.5em;
+    }
+
+    .card-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    @media (max-width: 768px) {
+      .game-board {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .game-board {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+<% end %>
+
+<%= content_for :scripts do %>
+  <script>
+    let hasFlippedCard = false;
+    let lockBoard = false;
+    let firstCard, secondCard;
+    let matches = 0;
+    let score = 0;
+
+    document.querySelectorAll('.card-container').forEach(card => {
+      card.addEventListener('click', function() {
+        const memoryCard = this.querySelector('.memory-card');
+        flipCard(memoryCard);
+      });
+    });
+
+    function flipCard(card) {
+      if (lockBoard) return;
+      if (card === firstCard) return;
+
+      card.classList.add('flipped');
+
+      if (!hasFlippedCard) {
+        hasFlippedCard = true;
+        firstCard = card;
+        return;
+      }
+
+      secondCard = card;
+      checkForMatch();
+    }
+
+    function checkForMatch() {
+      let isMatch = firstCard.parentElement.dataset.photoId === secondCard.parentElement.dataset.photoId;
+
+      isMatch ? disableCards() : unflipCards();
+    }
+
+    function disableCards() {
+      firstCard.parentElement.removeEventListener('click', () => flipCard(firstCard));
+      secondCard.parentElement.removeEventListener('click', () => flipCard(secondCard));
+      matches++;
+      score += 10;
+      updateStats();
+      resetBoard();
+    }
+
+    function unflipCards() {
+      lockBoard = true;
+      score -= 1;
+      updateStats();
+
+      setTimeout(() => {
+        firstCard.classList.remove('flipped');
+        secondCard.classList.remove('flipped');
+        resetBoard();
+      }, 1500);
+    }
+
+    function resetBoard() {
+      [hasFlippedCard, lockBoard] = [false, false];
+      [firstCard, secondCard] = [null, null];
+    }
+
+    function updateStats() {
+      document.getElementById('score').textContent = score;
+      document.getElementById('matches').textContent = matches;
+      
+      if (matches === 8) {
+        setTimeout(() => {
+          alert('Congratulations! You won! Final score: ' + score);
+          saveGame();
+        }, 500);
+      }
+    }
+
+    function saveGame() {
+      fetch('/games', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({
+          game: {
+            score: score,
+            completed: true
+          }
+        })
+      }).then(response => {
+        if (response.ok) {
+          window.location.href = '/photos';
+        }
+      });
+    }
+
+    // Shuffle cards
+    (function shuffle() {
+      const cards = document.querySelectorAll('.card-container');
+      cards.forEach(card => {
+        let randomPos = Math.floor(Math.random() * cards.length);
+        card.style.order = randomPos;
+      });
+    })();
+  </script>
+<% end %>

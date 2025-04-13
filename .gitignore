@@ -7,9 +7,6 @@
 # Ignore bundler config.
 /.bundle
 
-# Ignore all environment files.
-/.env*
-
 # Ignore all logfiles and tempfiles.
 /log/*
 /tmp/*
@@ -21,14 +18,37 @@
 !/tmp/pids/
 !/tmp/pids/.keep
 
-# Ignore storage (uploaded files in development and any SQLite databases).
+# Ignore uploaded files in development.
 /storage/*
 !/storage/.keep
 /tmp/storage/*
 !/tmp/storage/
 !/tmp/storage/.keep
 
-/public/assets
-
 # Ignore master key for decrypting credentials and more.
 /config/master.key
+
+# Ignore environment variables
+.env
+
+# Ignore database configuration
+/config/database.yml
+
+# Ignore node modules
+/node_modules
+
+# Ignore precompiled assets
+/public/assets
+
+# Ignore Mac system files
+.DS_Store
+
+# Ignore RubyMine files
+.idea/
+
+# Ignore coverage files
+/coverage/
+
+# Ignore local configuration
+/config/application.yml
+/config/secrets.yml
