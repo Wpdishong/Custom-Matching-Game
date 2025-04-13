@@ -32,7 +32,7 @@ A Ruby on Rails application that lets users upload their photos and play a memor
 
 1. Clone the repository
 ```bash
-git clone [your-repo-url]
+git clone https://github.com/wpdishong/custom-matching-game.git
 cd my_rails_app
 ```
 
